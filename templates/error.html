@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis Error - SOIL.AI{% endblock %}
+
+{% block content %}
+<div class="container py-8 animate-fade-in">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="glass-card p-5 text-center" style="border-top: 4px solid var(--less-fertile);">
+                <div class="bg-danger bg-opacity-10 p-4 rounded-circle d-inline-flex mb-4">
+                    <i class="fas fa-exclamation-circle text-danger fa-3x"></i>
+                </div>
+                <h2 class="fw-bold mb-3">Diagnostic Error</h2>
+                <p class="text-main opacity-90 lead mb-4">{{ error }}</p>
+                <div class="p-3 bg-dark bg-opacity-50 rounded-3 mb-4 text-start border border-white border-opacity-10">
+                    <small class="text-muted d-block mb-1 fw-bold">Potential Causes:</small>
+                    <ul class="text-main opacity-75 small mb-0">
+                        <li>Input values outside realistic agricultural ranges</li>
+                        <li>Missing or malformed parameters</li>
+                        <li>Temporary server interruption</li>
+                    </ul>
+                </div>
+                <a href="/" class="btn btn-modern w-100">
+                    <i class="fas fa-redo me-2"></i>Retry Analysis
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

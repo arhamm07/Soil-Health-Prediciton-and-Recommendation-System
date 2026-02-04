@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}SOIL.AI - Intelligent Soil Health Analysis{% endblock %}
+
+{% block content %}
+<div class="hero-section animate-fade-in">
+    <div class="container">
+        <h1 class="hero-title">Intelligent <span style="color: var(--primary-light)">Soil Analysis</span></h1>
+        <p class="hero-subtitle">Harness the power of Random Forest machine learning to unlock your soil's potential. Get precise fertility predictions and actionable preservation plans in seconds.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="#prediction-form" class="btn btn-modern">Start Analysis</a>
+            <a href="#about" class="btn btn-outline-modern">Learn More</a>
+        </div>
+    </div>
+</div>
+
+<section id="prediction-form" class="form-section">
+    <div class="container">
+        <div class="glass-card p-4 p-md-5">
+            <div class="text-center mb-5">
+                <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 mb-3">Diagnostic Engine</span>
+                <h2 class="fw-bold">Soil Fertility Diagnostic</h2>
+                <p class="text-main opacity-75">Enter the 12 chemical parameters from your soil test report below.</p>
+            </div>
+
+            <form action="/predict" method="POST" id="soil-form">
+                <!-- Macronutrients Section -->
+                <div class="row mb-5">
+                    <div class="col-12 mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
+                                <i class="fas fa-flask text-primary"></i>
+                            </div>
+                            <h4 class="mb-0 fw-bold">Macronutrients</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="input-group-modern">
+                            <label for="N" class="form-label">Nitrogen (N)</label>
+                            <input type="number" step="0.01" min="1" max="500" class="form-control-modern" id="N" name="N" placeholder="0.00" required>
+                            <div class="text-end mt-1"><small class="text-muted">mg/kg</small></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="input-group-modern">
+                            <label for="P" class="form-label">Phosphorus (P)</label>
+                            <input type="number" step="0.01" min="0.1" max="150" class="form-control-modern" id="P" name="P" placeholder="0.00" required>
+                            <div class="text-end mt-1"><small class="text-muted">mg/kg</small></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="input-group-modern">
+                            <label for="K" class="form-label">Potassium (K)</label>
+                            <input type="number" step="0.01" min="5" max="1000" class="form-control-modern" id="K" name="K" placeholder="0.00" required>
+                            <div class="text-end mt-1"><small class="text-muted">mg/kg</small></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="input-group-modern">
+                            <label for="S" class="form-label">Sulfur (S)</label>
+                            <input type="number" step="0.01" min="0.5" max="50" class="form-control-modern" id="S" name="S" placeholder="0.00" required>
+                            <div class="text-end mt-1"><small class="text-muted">mg/kg</small></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Micronutrients Section -->
+                <div class="row mb-5">
+                    <div class="col-12 mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning bg-opacity-10 p-2 rounded-3 me-3">
+                                <i class="fas fa-microscope text-warning"></i>
+                            </div>
+                            <h4 class="mb-0 fw-bold">Micronutrients</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-4">
+                        <div class="input-group-modern">
+                            <label for="Zn" class="form-label">Zinc (Zn)</label>
+                            <input type="number" step="0.01" min="0.05" max="50" class="form-control-modern" id="Zn" name="Zn" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-4">
+                        <div class="input-group-modern">
+                            <label for="Fe" class="form-label">Iron (Fe)</label>
+                            <input type="number" step="0.01" min="0.1" max="50" class="form-control-modern" id="Fe" name="Fe" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="input-group-modern">
+                            <label for="Cu" class="form-label">Copper (Cu)</label>
+                            <input type="number" step="0.01" min="0.05" max="5" class="form-control-modern" id="Cu" name="Cu" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="input-group-modern">
+                            <label for="Mn" class="form-label">Manganese (Mn)</label>
+                            <input type="number" step="0.01" min="0.1" max="40" class="form-control-modern" id="Mn" name="Mn" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-4">
+                        <div class="input-group-modern">
+                            <label for="B" class="form-label">Boron (B)</label>
+                            <input type="number" step="0.01" min="0.05" max="5" class="form-control-modern" id="B" name="B" placeholder="0.00" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Soil Physical Properties Section -->
+                <div class="row mb-5">
+                    <div class="col-12 mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info bg-opacity-10 p-2 rounded-3 me-3">
+                                <i class="fas fa-vial text-info"></i>
+                            </div>
+                            <h4 class="mb-0 fw-bold">Physical Properties</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="input-group-modern">
+                            <label for="pH" class="form-label">Soil pH</label>
+                            <input type="number" step="0.1" min="0.5" max="14" class="form-control-modern" id="pH" name="pH" placeholder="7.0" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="input-group-modern">
+                            <label for="EC" class="form-label">Electrical Conductivity</label>
+                            <input type="number" step="0.01" min="0.05" max="3" class="form-control-modern" id="EC" name="EC" placeholder="0.50" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="input-group-modern">
+                            <label for="OC" class="form-label">Organic Carbon (%)</label>
+                            <input type="number" step="0.01" min="0.05" max="30" class="form-control-modern" id="OC" name="OC" placeholder="1.20" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center pt-4">
+                    <button type="button" id="fill-sample-data" class="btn btn-outline-modern me-3">
+                        <i class="fas fa-magic me-2"></i>Use Sample Data
+                    </button>
+                    <button type="submit" class="btn btn-modern">
+                        Run Analysis <i class="fas fa-chevron-right ms-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<section id="about" class="py-8 bg-dark bg-opacity-50">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <div class="pe-lg-5">
+                    <h2 class="display-5 fw-bold mb-4 text-main">Why SOIL.AI?</h2>
+                    <p class="text-main opacity-75 lead mb-5">Our proprietary analysis engine utilizes a Random Forest Classifier trained on thousands of soil profiles to deliver accuracy beyond traditional methods.</p>
+                    
+                    <div class="d-flex mb-4">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-4">
+                            <i class="fas fa-bolt text-primary fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-main">Real-time Predictions</h5>
+                            <p class="text-main opacity-75">Get results instantly with our optimized inference engine.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-4">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-4">
+                            <i class="fas fa-shield-alt text-primary fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-main">Expert Recommendations</h5>
+                            <p class="text-main opacity-75">Action plans derived from USDA and FAO agricultural standards.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="glass-card overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Agriculture" class="img-fluid w-100" style="opacity: 0.8;">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

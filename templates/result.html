@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis Results - SOIL.AI{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate-fade-in">
+    <!-- Header Summary -->
+    <div class="glass-card p-4 p-md-5 mb-5 text-center">
+        <div class="fertility-badge-new 
+            {% if result.prediction == 0 %}badge-glow-less
+            {% elif result.prediction == 1 %}badge-glow-fertile
+            {% else %}badge-glow-high{% endif %}">
+            <i class="fas {% if result.prediction == 0 %}fa-exclamation-triangle{% elif result.prediction == 1 %}fa-check-circle{% else %}fa-award{% endif %}"></i>
+        </div>
+        <h1 class="display-4 fw-bold mb-2 text-main">{{ result.fertility_class }}</h1>
+        <p class="text-main opacity-75 lead mb-4">Diagnostic complete. Our Random Forest model predicts high-confidence fertility metrics.</p>
+        
+        <div class="d-flex justify-content-center gap-4 flex-wrap">
+            <div class="px-4 py-2 bg-dark bg-opacity-50 rounded-pill border border-white border-opacity-10">
+                <small class="text-main opacity-50 d-block fw-bold text-uppercase">Confidence</small>
+                <span class="fw-bold text-primary">{{ (result.confidence_score * 100)|round|int }}%</span>
+            </div>
+            <div class="px-4 py-2 bg-dark bg-opacity-50 rounded-pill border border-white border-opacity-10">
+                <small class="text-main opacity-50 d-block fw-bold text-uppercase">Analysis Date</small>
+                <span class="fw-bold text-main">{{ result.timestamp.split(' ')[0] }}</span>
+            </div>
+            <div class="px-4 py-2 bg-dark bg-opacity-50 rounded-pill border border-white border-opacity-10">
+                <small class="text-main opacity-50 d-block fw-bold text-uppercase">System Status</small>
+                <span class="fw-bold text-success">Verified</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Visual Analysis -->
+        <div class="col-lg-7">
+            <div class="glass-card h-100 p-4 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0 fw-bold text-main"><i class="fas fa-chart-area me-2 text-primary"></i>Chemical Profile</h4>
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-modern active" id="radarChartBtn">Radar</button>
+                        <button type="button" class="btn btn-outline-modern" id="barChartBtn">Bar</button>
+                    </div>
+                </div>
+                <div class="flex-grow-1 d-flex align-items-center">
+                    <div style="height: 350px;" class="w-100">
+                        <canvas id="parameterChart" data-input='{{ result.input_data|tojson }}'></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="col-lg-5">
+            <div class="glass-card h-100 p-4" style="border-left: 4px solid var(--primary-glow);">
+                <h4 class="fw-bold mb-4"><i class="fas fa-lightbulb me-2 text-warning"></i>Optimization Plan</h4>
+                <h5 class="text-primary mb-3">{{ result.recommendation.title }}</h5>
+                <p class="text-main opacity-75 mb-4">{{ result.recommendation.description }}</p>
+                
+                <ul class="list-unstyled">
+                    {% for action in result.recommendation.actions %}
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="fas fa-check-circle text-success mt-1 me-3"></i>
+                        <span class="text-main opacity-90 small">{{ action }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Raw Data Table -->
+    <div class="glass-card p-4 mb-5">
+        <h4 class="fw-bold mb-4 text-main"><i class="fas fa-table me-2 text-info"></i>Measured Parameters</h4>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0 table-glass">
+                <thead>
+                    <tr class="text-main opacity-50 small uppercase">
+                        <th>Parameter</th>
+                        <th>Measured Value</th>
+                        <th>Standard Unit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for key, value in result.input_data.items() %}
+                    <tr>
+                        <td class="fw-bold text-main">{{ key }}</td>
+                        <td class="text-main">{{ value }}</td>
+                        <td class="text-main opacity-75 small">
+                            {% if key in ['N', 'P', 'K', 'S', 'Zn', 'Fe', 'Cu', 'Mn', 'B'] %}mg/kg
+                            {% elif key == 'pH' %}Log Scale
+                            {% elif key == 'EC' %}dS/m
+                            {% elif key == 'OC' %}%
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="text-center">
+        <a href="/" class="btn btn-modern me-3">
+            <i class="fas fa-redo me-2"></i>New Analysis
+        </a>
+        <button class="btn btn-outline-modern" onclick="window.print()">
+            <i class="fas fa-download me-2"></i>Export Report
+        </button>
+    </div>
+</div>
+{% endblock %}

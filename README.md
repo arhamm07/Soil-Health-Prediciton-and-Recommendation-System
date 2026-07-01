@@ -2,6 +2,9 @@
 
 An advanced web application for soil fertility prediction and optimization using machine learning.
 
+@FYP_Report Template-1.doc 
+alright so understand this template , it is given by my institute and i have to write according to it so i prefer u make an .md file to make a full plan of writng thsi thesis using the skill that we have just finalized and strictly following the template and if u want to use python then always use my conda env
+
 ## Features
 
 - Predict soil fertility based on 12 key soil parameters

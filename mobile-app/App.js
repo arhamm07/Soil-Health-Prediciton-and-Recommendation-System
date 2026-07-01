@@ -1,15 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
-import { Home, Info, MessageSquare, Sprout } from 'lucide-react-native';
+import { Home, Info, Sprout } from 'lucide-react-native';
 
 import HomeScreen from './src/screens/HomeScreen';
 import PredictionScreen from './src/screens/PredictionScreen';
 import ResultScreen from './src/screens/ResultScreen';
 import AboutScreen from './src/screens/AboutScreen';
-import ContactScreen from './src/screens/ContactScreen';
+import SplashScreen from './src/components/SplashScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -23,8 +23,6 @@ function TabNavigator() {
             return <Home color={color} size={size} />;
           } else if (route.name === 'About') {
             return <Info color={color} size={size} />;
-          } else if (route.name === 'Contact') {
-            return <MessageSquare color={color} size={size} />;
           }
         },
         tabBarActiveTintColor: '#2e7d32',
@@ -44,16 +42,17 @@ function TabNavigator() {
         component={AboutScreen} 
         options={{ title: 'About Us' }}
       />
-      <Tab.Screen 
-        name="Contact" 
-        component={ContactScreen} 
-        options={{ title: 'Contact' }}
-      />
     </Tab.Navigator>
   );
 }
 
 export default function App() {
+  const [isSplashVisible, setIsSplashVisible] = useState(true);
+
+  if (isSplashVisible) {
+    return <SplashScreen onAnimationComplete={() => setIsSplashVisible(false)} />;
+  }
+
   return (
     <NavigationContainer>
       <StatusBar style="light" />

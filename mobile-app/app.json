@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "Soil Health Optimizer",
+    "name": "SoilHealthAI",
     "slug": "soil-health-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1b5e20"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -18,13 +18,19 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.soilhealth.ai",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#1b5e20"
       }
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e5c9e9f5-0eaf-4a55-a950-01bc10cf921a"
+      }
     }
   }
 }

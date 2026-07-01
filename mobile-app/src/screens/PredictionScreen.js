@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
-import axios from 'axios';
 import { Beaker, Microscope, Dna, Sparkles, ChevronRight, Info } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { predict } from '../utils/ModelInference';
 
-const API_URL = 'http://192.168.10.49:5000/api/predict';
+// Feature names in the exact order expected by the model
+const FEATURE_NAMES = ['N', 'P', 'K', 'pH', 'EC', 'OC', 'S', 'Zn', 'Fe', 'Cu', 'Mn', 'B'];
 
 const PARAMETER_RANGES = {
   N: { min: 1, max: 500, label: 'Nitrogen' },
@@ -21,6 +22,59 @@ const PARAMETER_RANGES = {
   B: { min: 0.05, max: 5, label: 'Boron' }
 };
 
+// Fertility class labels
+const FERTILITY_CLASSES = {
+  0: "Less Fertile",
+  1: "Fertile",
+  2: "Highly Fertile"
+};
+
+// Recommended actions based on fertility class
+const RECOMMENDATIONS = {
+  0: {
+    "title": "Soil Improvement Plan for Less Fertile Soil",
+    "description": "Your soil requires significant improvements to reach optimal fertility. Following these USDA and FAO recommended practices will help restore soil health and productivity.",
+    "actions": [
+      "Minimize soil disturbance: Reduce or eliminate tillage to preserve soil structure and organic matter",
+      "Maximize soil cover: Plant cover crops (like clover, rye, or radishes) to protect soil from erosion and add organic matter",
+      "Increase biodiversity: Implement diverse crop rotations including legumes to fix nitrogen naturally",
+      "Add organic matter: Apply compost, manure, or other organic amendments to improve soil structure and nutrient content",
+      "Balance soil pH: Apply lime if soil is acidic (pH < 6.0) or sulfur if alkaline (pH > 7.5) based on soil test results",
+      "Address nutrient deficiencies: Apply targeted fertilizers based on soil test results, focusing on limiting nutrients",
+      "Establish living roots: Maintain living plants year-round to support soil biology and nutrient cycling",
+      "Implement Integrated Soil Fertility Management (ISFM): Combine organic and inorganic inputs with improved germplasm"
+    ]
+  },
+  1: {
+    "title": "Soil Maintenance Plan for Fertile Soil",
+    "description": "Your soil is fertile but requires regular maintenance to sustain productivity. These science-based practices from USDA and FAO will help maintain optimal soil health.",
+    "actions": [
+      "Practice crop rotation: Alternate different crop families to break pest cycles and balance nutrient use",
+      "Use cover crops strategically: Plant cover crops during fallow periods to maintain soil coverage and add organic matter",
+      "Maintain organic matter levels: Add compost or incorporate crop residues to support soil biology",
+      "Monitor and maintain pH: Test soil regularly and make small adjustments to keep pH in the optimal range (6.0-7.0)",
+      "Practice conservation tillage: Minimize soil disturbance to preserve soil structure and biology",
+      "Apply nutrients based on crop removal: Replace only what crops remove to prevent excess or deficiency",
+      "Integrate livestock if possible: Managed grazing can improve nutrient cycling and soil biology",
+      "Implement buffer strips: Create vegetated areas along water bodies to prevent nutrient runoff"
+    ]
+  },
+  2: {
+    "title": "Soil Preservation Plan for Highly Fertile Soil",
+    "description": "Your soil is highly fertile. Focus on preservation and sustainable practices to maintain this optimal state according to USDA and FAO guidelines.",
+    "actions": [
+      "Practice precision nutrient management: Apply only what crops need when they need it to prevent excess",
+      "Maximize continuous living roots: Use cover crops or perennials to maintain living roots year-round",
+      "Implement diverse crop rotations: Include 3+ crop types to maintain biodiversity above and below ground",
+      "Monitor soil health indicators: Regularly test organic matter, biological activity, and nutrient levels",
+      "Maintain soil coverage: Keep residue on soil surface or living plants growing at all times",
+      "Practice no-till or minimal tillage: Avoid disturbing soil structure and biology",
+      "Use nutrient budgeting: Track inputs and outputs to maintain balance and prevent accumulation",
+      "Implement agroforestry practices: Integrate trees or shrubs if appropriate to enhance biodiversity and soil protection"
+    ]
+  }
+};
+
 export default function PredictionScreen({ navigation }) {
   const [formData, setFormData] = useState({
     N: '', P: '', K: '', pH: '', EC: '', OC: '', S: '', Zn: '', Fe: '', Cu: '', Mn: '', B: ''
@@ -35,6 +89,16 @@ export default function PredictionScreen({ navigation }) {
     setFormData({
       N: '150', P: '45', K: '210', pH: '6.5', EC: '0.45', OC: '0.85',
       S: '12', Zn: '1.2', Fe: '4.5', Cu: '0.8', Mn: '2.5', B: '0.5'
+    });
+  };
+
+  const prepareInputData = (data) => {
+    // Convert to array in correct order and apply log transformation
+    return FEATURE_NAMES.map(feature => {
+      const val = parseFloat(data[feature]);
+      // Apply log transformation as done in the backend
+      // Handle zeros by adding a small constant
+      return Math.log10(val + 1e-10);
     });
   };
 
@@ -64,31 +128,60 @@ export default function PredictionScreen({ navigation }) {
     const startTime = Date.now();
 
     try {
+      // 1. Prepare payload for local use (and ResultScreen display)
       const payload = {};
       Object.keys(formData).forEach(key => {
         payload[key] = parseFloat(formData[key]);
       });
 
-      const response = await axios.post(API_URL, payload, { timeout: 10000 });
-      const endTime = Date.now();
-      console.log(`Success: Received in ${endTime - startTime}ms`);
+      // 2. Prepare input array for model
+      const modelInput = prepareInputData(formData);
+
+      // 3. Run prediction (simulating async to allow UI update)
+      // Use setTimeout to ensure the UI thread isn't blocked immediately if model is large
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      if (response.data && response.data.success) {
-        navigation.navigate('Result', { 
-          result: response.data,
-          inputData: payload
-        });
+      const output = predict(modelInput);
+      const endTime = Date.now();
+      console.log(`Success: Inference took ${endTime - startTime}ms`);
+
+      // Handle m2cgen output (array of probabilities for classifiers)
+      let prediction;
+      let confidenceScore = 0;
+
+      if (Array.isArray(output)) {
+        // Find the index of the highest probability
+        const maxProb = Math.max(...output);
+        prediction = output.indexOf(maxProb);
+        confidenceScore = Math.round(maxProb * 100);
       } else {
-        Alert.alert('Analysis Failed', response.data?.error || 'Unknown error occurred during analysis.');
+        // Fallback if model returns a single class label (unlikely for classifiers but possible)
+        prediction = Math.round(output);
+        confidenceScore = 85; // Default if no probability
       }
+
+      // 4. Construct result object
+      const fertilityClass = FERTILITY_CLASSES[prediction] || "Unknown";
+      const recommendation = RECOMMENDATIONS[prediction] || RECOMMENDATIONS[1];
+
+      const result = {
+        success: true,
+        prediction: prediction,
+        fertility_class: fertilityClass,
+        recommendation: recommendation,
+        confidence_score: confidenceScore,
+        timestamp: new Date().toLocaleString()
+      };
+
+      // 5. Navigate
+      navigation.navigate('Result', { 
+        result: result,
+        inputData: payload
+      });
+
     } catch (error) {
-      const endTime = Date.now();
-      console.error(`Error after ${endTime - startTime}ms:`, error.message);
-      
-      let msg = 'Could not connect to server. Ensure Flask is running on http://192.168.10.49:5000';
-      if (error.code === 'ECONNABORTED') msg = 'Request timed out. Server is taking too long.';
-      
-      Alert.alert('Connection Error', msg);
+      console.error("Prediction Error:", error);
+      Alert.alert('Analysis Failed', 'An error occurred during local analysis.');
     } finally {
       setLoading(false);
     }
